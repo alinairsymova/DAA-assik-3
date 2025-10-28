@@ -73,7 +73,7 @@ public class KruskalAlgorithm implements MSTAlgorithm {
 
         public String find(String vertex) {
             operations++;
-            // findOperations++ будет увеличиваться в основном классе
+           // findOperations++;
 
             if (!pathCompression) {
                 return parent.get(vertex);
@@ -89,7 +89,7 @@ public class KruskalAlgorithm implements MSTAlgorithm {
 
         public boolean union(String vertex1, String vertex2) {
             operations++;
-            // unionOperations++ будет увеличиваться в основном классе
+            // unionOperations++
 
             String root1 = find(vertex1);
             String root2 = find(vertex2);
@@ -279,23 +279,19 @@ public class KruskalAlgorithm implements MSTAlgorithm {
      * Helper method to get edges from graph using public API
      */
     private List<Edge> getEdgesFromGraph(Graph graph) {
-        // Since we can't access getEdgesForAlgorithms from different package,
-        // we need to work with the public API or use DTO conversion
         List<Edge> edges = new ArrayList<>();
 
-        // Get all vertices and build edges from adjacency information
-        List<String> vertices = graph.getVertexIds();
-        Set<String> processedPairs = new HashSet<>();
-
-        for (String vertex : vertices) {
-            List<Edge> adjacentEdges = getAdjacentEdges(graph, vertex);
-            for (Edge edge : adjacentEdges) {
-                String edgeId = generateEdgeId(edge.getFrom(), edge.getTo());
-                if (!processedPairs.contains(edgeId)) {
-                    edges.add(edge);
-                    processedPairs.add(edgeId);
-                }
+        try {
+            // Get all EdgeDTOs and convert to Edge objects
+            List<Graph.EdgeDTO> edgeDTOs = graph.getEdges();
+            for (Graph.EdgeDTO dto : edgeDTOs) {
+                Edge edge = new Edge.Builder(dto.getFrom(), dto.getTo())
+                        .weight(dto.getWeight())
+                        .build();
+                edges.add(edge);
             }
+        } catch (Exception e) {
+            throw new MSTComputationException("Failed to get edges from graph", e);
         }
 
         return edges;

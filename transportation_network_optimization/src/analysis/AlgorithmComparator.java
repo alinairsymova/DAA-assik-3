@@ -19,6 +19,13 @@ public class AlgorithmComparator {
     private final double significanceThreshold;
     private final boolean enableDetailedAnalysis;
 
+    public AlgorithmComparator() {
+
+        comparisonIterations = 0;
+        significanceThreshold = 0;
+        enableDetailedAnalysis = false;
+    }
+
     /**
      * Comparison result with detailed metrics
      */
@@ -186,7 +193,7 @@ public class AlgorithmComparator {
     /**
      * Private constructor
      */
-    private AlgorithmComparator(Builder builder) {
+    public AlgorithmComparator(Builder builder) {
         this.comparisonIterations = builder.comparisonIterations;
         this.significanceThreshold = builder.significanceThreshold;
         this.enableDetailedAnalysis = builder.enableDetailedAnalysis;

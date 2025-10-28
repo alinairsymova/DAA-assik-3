@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
  * Professional implementation of Prim's algorithm for Minimum Spanning Tree
  * Supports multiple priority queue strategies and comprehensive performance analysis
  */
-public class PrimAlgorithm implements MSTAlgorithm{
+public class PrimAlgorithm implements MSTAlgorithm {
+
     private final PriorityQueueStrategy queueStrategy;
     private final boolean enableFibonacciHeap;
     private final boolean trackOperations;
@@ -328,7 +329,7 @@ public class PrimAlgorithm implements MSTAlgorithm{
     }
 
     /**
-     * Core Prim algorithm implementation
+     * Core Prim algorithm implementation - FIXED VERSION
      */
     private List<Edge> executePrim(Graph graph) {
         Map<String, PrimVertex> vertexMap = initializeVertices(graph);
@@ -336,31 +337,40 @@ public class PrimAlgorithm implements MSTAlgorithm{
 
         // Choose starting vertex
         String startVertex = graph.getVertexIds().get(0);
-        vertexMap.get(startVertex).key = 0;
+        vertexMap.get(startVertex).key = 0.0;
 
-        // Initialize priority queue based on strategy
+        // Initialize priority queue
         QueueWrapper queue = initializeQueue(vertexMap.values());
 
+        System.out.println("DEBUG: Starting Prim with " + vertexMap.size() + " vertices");
+
+        int verticesProcessed = 0;
         while (!queue.isEmpty()) {
             PrimVertex current = queue.poll();
             operationsCount++;
             queueOperations++;
+            verticesProcessed++;
 
+            System.out.println("DEBUG: Processing vertex: " + current.id + ", key: " + current.key +
+                    " (" + verticesProcessed + "/" + graph.getVerticesCount() + ")");
+
+            // Add edge to MST if it's not the starting vertex
             if (current.minEdge != null) {
                 current.minEdge.setInMST(true);
                 mstEdges.add(current.minEdge);
                 operationsCount++;
+                System.out.println("DEBUG: Added edge to MST: " + current.minEdge.getFrom() +
+                        "-" + current.minEdge.getTo() + " weight: " + current.minEdge.getWeight());
             }
 
-            // Process adjacent vertices
+            // Process adjacent vertices - FIXED: Use proper edge retrieval
             processAdjacentVertices(graph, current, vertexMap, queue);
 
-            // Early termination check
-            if (mstEdges.size() >= graph.getVerticesCount() - 1) {
-                break;
-            }
+            System.out.println("DEBUG: MST edges so far: " + mstEdges.size() +
+                    "/" + (graph.getVerticesCount() - 1));
         }
 
+        System.out.println("DEBUG: Final MST edges: " + mstEdges.size());
         validateMST(graph, mstEdges);
         return mstEdges;
     }
@@ -378,7 +388,7 @@ public class PrimAlgorithm implements MSTAlgorithm{
     }
 
     /**
-     * Process adjacent vertices and update keys
+     * Process adjacent vertices and update keys - FIXED VERSION
      */
     private void processAdjacentVertices(Graph graph, PrimVertex current,
                                          Map<String, PrimVertex> vertexMap, QueueWrapper queue) {
@@ -392,59 +402,43 @@ public class PrimAlgorithm implements MSTAlgorithm{
             String neighborId = edge.getOtherVertex(current.id);
             PrimVertex neighbor = vertexMap.get(neighborId);
 
-            if (neighbor.inQueue && edge.getWeight() < neighbor.key) {
+            // FIX: Check if neighbor exists and is still in queue
+            if (neighbor != null && neighbor.inQueue && edge.getWeight() < neighbor.key) {
                 neighbor.key = edge.getWeight();
                 neighbor.minEdge = edge;
                 queue.decreaseKey(neighbor, edge.getWeight());
                 decreaseKeyOperations++;
                 operationsCount += 2;
+
+                System.out.println("DEBUG: Updated " + neighborId + " key to " + edge.getWeight());
             }
         }
     }
 
     /**
-     * Get adjacent edges using public Graph API
+     * Get adjacent edges using public Graph API - FIXED VERSION
      */
     private List<Edge> getAdjacentEdges(Graph graph, String vertexId) {
-        // Since we're in a different package, we need to work with public methods
-        // This method would need to be implemented based on your Graph class's public API
         List<Edge> edges = new ArrayList<>();
 
-        // Example implementation - you'll need to adapt this to your Graph class
         try {
-            // If your Graph class has a method to get adjacent edges as Edge objects
-            // edges = graph.getAdjacentEdges(vertexId);
-
-            // If you only have DTOs, you'll need to convert them
-            List<Edge> allEdges = getAllEdgesFromGraph(graph);
-            for (Edge edge : allEdges) {
-                if (edge.containsVertex(vertexId)) {
-                    edges.add(edge);
-                }
+            // Get EdgeDTOs from graph and convert to Edge objects
+            List<Graph.EdgeDTO> edgeDTOs = graph.getAdjacentEdges(vertexId);
+            for (Graph.EdgeDTO dto : edgeDTOs) {
+                // Convert EdgeDTO to Edge - ensure we create proper Edge objects
+                Edge edge = new Edge.Builder(dto.getFrom(), dto.getTo())
+                        .weight(dto.getWeight())
+                        .build();
+                edges.add(edge);
+                operationsCount++;
             }
+
+            System.out.println("DEBUG: Vertex " + vertexId + " has " + edges.size() + " adjacent edges");
+
         } catch (Exception e) {
+            System.err.println("ERROR: Failed to get adjacent edges for vertex: " + vertexId);
             throw new MSTComputationException("Failed to get adjacent edges for vertex: " + vertexId, e);
         }
-
-        return edges;
-    }
-
-    /**
-     * Helper method to get all edges from graph
-     */
-    private List<Edge> getAllEdgesFromGraph(Graph graph) {
-        // This method needs to be implemented based on your Graph class's public API
-        // You might need to use DTO conversion or other public methods
-        List<Edge> edges = new ArrayList<>();
-
-        // Example: if your Graph has getEdges() that returns List<Edge>
-        // edges = graph.getEdges();
-
-        // Or if it returns DTOs, convert them:
-        // List<Edge.EdgeDTO> dtos = graph.getEdges();
-        // for (Edge.EdgeDTO dto : dtos) {
-        //     edges.add(new Edge(dto.getFrom(), dto.getTo(), dto.getWeight()));
-        // }
 
         return edges;
     }

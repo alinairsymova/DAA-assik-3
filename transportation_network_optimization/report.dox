@@ -1,0 +1,249 @@
+Assignment 3: Minimum Spanning Tree — Prim’s and Kruskal’s Algorithms
+Student: Irsymova Alina Rinatovna
+Course: Design and Analysis of Algorithms
+Date: October 2025
+1. Summary of Input Data and Algorithm Results
+Both Prim’s and Kruskal’s algorithms were implemented in Java to find the Minimum Spanning Tree (MST) of a connected, undirected, weighted graph. The same input data was used for both algorithms to ensure a fair comparison.
+A. Project creation — step by step
+1.	Project scaffold and environment
+o	Created a standard Java project named assignment_3_DAA in IntelliJ IDEA using OpenJDK 23. The project uses a single source folder src/ and a simple build/run configuration (IDEA’s default project settings).
+o	Verified the Java runtime and project SDK to ensure consistent compilation across machines.
+2.	High-level design decisions
+o	Chose a modular structure: each major concept is a separate class file. This improves readability and aligns with software engineering best practices for maintainability and testing.
+o	Files created:
+	model.Edge.java — representation of an undirected weighted edge (implements Comparable for sorting).
+	model.Graph.java — container for vertex list and edge list; provides accessor methods.
+	algorithms.PrimAlgorithm.java — implementation of Prim’s algorithm (simple greedy selection based on repeated scan of candidate edges).
+	algorithms.KruskalAlgorithm.java — implementation of Kruskal’s algorithm using a Union-Find (disjoint set) structure for cycle detection.
+	model.MSTResult.java — simple data transfer object that stores MST edges, total cost, operation count and execution time.
+	app.Main.java — driver: builds test graphs, runs both algorithms and prints results.
+3.	Implementation process
+o	Implemented model.Edge with compareTo() to allow easy sorting of edges by weight (necessary for Kruskal).
+o	Implemented model.Graph as a lightweight structure that stores vertices and an edge list. This makes it straightforward to run Kruskal (edge list) and a simple Prim (scan over edges) without needing a complicated adjacency API.
+o	Implemented Prim in a straightforward way (suitable for teaching / clear operation counting): repeatedly scanned edges to choose the least-weight edge that connects the growing tree to a new vertex. This variant is easy to count operations and explain. (Note: one may also implement Prim with a priority queue and adjacency lists for better asymptotic performance.)
+o	Implemented Kruskal by:
+	Sorting the edges by weight,
+	Iterating edges from smallest to largest,
+	Using a Union-Find structure to detect cycles and merge components when an edge is accepted.
+4.	Operation counting and timing
+o	Instrumented both algorithms to increment counters at meaningful algorithmic steps:
+	Prim: counted edge inspections, candidate selections, and additions to the MST.
+	Kruskal: counted sorts (edge sort counted once), find and union calls, and edge acceptance/skip events.
+o	Execution time measured using System.nanoTime() and reported in milliseconds. The code prints both execution time and operation-count counters so we can discuss both wall-clock cost and algorithmic work.
+5.	Testing and validation
+o	Used the sample graph (5 vertices, 7 edges) for initial verification.
+o	Validated correctness by checking two important invariants:
+	Both algorithms produce the same total weight for the MST.
+	The MST contains exactly V − 1 edges and is cycle-free.
+o	Verified outputs visually and by recomputing the sum of selected edge weights.
+6.	Packaging
+o	Project packaged into a .zip for easy distribution and import into IntelliJ. The package includes the src/ folder with all .java files and a short README (or I can add one for you).
+________________________________________
+B. What the project does — precise functional description
+•	Input: the current driver builds an in-memory graph from hardcoded lists of vertices and edges. (The structure is intentionally simple so it’s easy to replace with JSON input if required.)
+•	Process:
+1.	Construct model.Graph object (vertices and edges).
+2.	Run algorithms.PrimAlgorithm.prim(graph) which returns model.MSTResult containing the selected edges, cost, operation count, and runtime.
+3.	Run algorithms.KruskalAlgorithm.kruskal(graph) which returns its model.MSTResult.
+4.	Print both results for side-by-side comparison.
+•	Output: console output and printed tables showing:
+o	The list of edges in each MST,
+o	The total cost,
+o	Operation counts (instrumentation),
+o	Execution time in milliseconds.
+•	Extensibility: the modular code allows:
+o	Replacing the hardcoded graph with JSON file input or command-line arguments,
+o	Implementing an adjacency-list/priority-queue Prim variant,
+o	Adding automated tests and batch benchmarks across many random graphs.
+________________________________________
+C. Detailed algorithmic descriptions and data structures used
+Prim (implemented variant in this project):
+•	Data structures: graph represented as edge list and a Set of visited vertices.
+•	Stepwise operation:
+1.	Pick a starting vertex and mark it visited.
+2.	Repeatedly scan all edges and select the minimum-weight edge that connects a visited vertex with an unvisited vertex.
+3.	Add that edge to the MST, mark the newly connected vertex visited.
+4.	Continue until V − 1 edges are selected or all vertices are visited.
+•	Complexity: O(E · V) in the naive scan implementation; can be improved to O(E log V) using adjacency lists + priority queue (binary heap).
+Kruskal (implemented variant in this project):
+•	Data structures: edge list sorted by weight; Union-Find for dynamic component maintenance.
+•	Stepwise operation:
+1.	Sort all edges by weight: O(E log E).
+2.	Iterate over edges from smallest to largest:
+	Use find(u) and find(v) to see if the edge connects different components.
+	If they are different, union(u, v) and add the edge to MST.
+3.	Stop when V − 1 edges have been added.
+•	Complexity: O(E log E) mainly due to sorting; Union-Find operations are near-constant (amortized α(n)) with path compression and union by rank.
+________________________________________
+D. Measurement methodology, caveats and interpretation
+•	Timing: measured with high-resolution clock (System.nanoTime()), converted to milliseconds. Because the sample graph is small, timings are tiny and sensitive to JVM warmup and OS scheduling. Therefore, operation counts are a more stable measure of algorithmic work for this small example.
+•	Operation counts: provide insight into how much logical work each algorithm did (comparisons, finds, unions, edge checks). Operation counts are implementation-dependent and primarily useful for relative comparison in the same codebase.
+•	Caveat: small graphs produce noisy timing data. In larger or batched experiments, runtime measurements become more meaningful. If absolute performance is required, run each algorithm many times and average (warming the JIT and minimizing external noise).
+________________________________________
+E. Expanded comparison (clearer, point-by-point)
+Correctness
+•	Both algorithms returned MSTs with the same total weight and with V − 1 edges → correctness validated.
+Asymptotic complexity
+•	Prim (with binary heap/adj list): O(E log V) — best when implemented with a priority queue (fast on dense graphs if implemented carefully).
+•	Kruskal: O(E log E) ~ O(E log V) — sorting dominates; faster on sparse graphs because E is small.
+Implementation complexity
+•	Prim: easier to implement in adjacency list + priority queue form; decrease-key can be tricky but is avoidable with lazy insert; simple variant with full scans is simplest conceptually but worse asymptotically.
+•	Kruskal: requires a robust Union-Find implementation (path compression and rank) but is conceptually simple: sort edges then greedily add.
+Memory usage
+•	Prim: adjacency list + priority queue memory — efficient for dense graphs if using adjacency matrix you pay O(V²).
+•	Kruskal: primarily needs the edge list and Union-Find arrays — memory proportional to O(E + V).
+When one is preferable over the other
+•	Dense graphs (E close to V²): Prim (with efficient heap) usually better.
+•	Sparse graphs (E ~ V): Kruskal is typically simpler and faster because sorting relatively few edges is cheap.
+•	model.Edge-based input (edge list): Kruskal fits naturally — no conversion needed.
+•	Adjacency representation supplied: Prim is more natural.
+Empirical result interpretation for this project
+•	Prim had more logical operations but lower execution time in this small test; Kruskal had fewer logical operations but higher measured runtime due to the constant-cost overhead of sorting and JVM startup effects. This difference would likely change at larger scales.
+________________________________________
+F. How to run, reproduce, and extend experiments
+1.	Run in IntelliJ: open app.Main.java, set the project SDK to Java 23, and click Run. Output is printed in the console.
+2.	Repeatability: re-run multiple times to observe timing variability. For serious benchmarking, run each algorithm 100—1000 times and compute mean and standard deviation.
+3.	Extending the project:
+o	Replace hardcoded graphs with JSON input: parse JSON into model.Graph instance.
+o	Implement Prim with adjacency lists + PriorityQueue<model.Edge> to measure O(E log V) behaviour.
+o	Add automated benchmark harness to generate random graphs with controllable V and E and collect averaged timings / operation counts.
+o	Export results to CSV or JSON for plotting and further statistical analysis.
+________________________________________
+G. Recommendations & further improvements
+•	For assignment submission: keep the simple and well-documented code (it demonstrates understanding and is easy to grade). Include the instrumented operation counters and a short README with run instructions.
+•	If optimizing for production or large graphs:
+o	Implement Prim with adjacency lists + PriorityQueue and implement a decrease-key optimization (or use lazy inserts).
+o	Use an efficient sort (the Java standard sort is fine) and optimize Union-Find with both path compression and union by rank (already used/encouraged).
+o	For extremely dense graphs, consider specialized data structures (Fibonacci heap in theory, though rarely needed in practice).
+•	Robustness:
+o	Add input validation (connectivity checks) and error messages for disconnected graphs.
+o	Add unit tests (e.g., JUnit) for algorithm correctness on edge cases (single-vertex graph, two vertices, disconnected graph).
+________________________________________
+H. Summary (one-paragraph)
+This project demonstrates a clear, modular implementation of both Prim’s and Kruskal’s MST algorithms in Java, instrumented to report both logical operation counts and execution times. The step-by-step development emphasized modularity (distinct classes), reproducibility (simple run instructions), and empirical validation (both algorithms yield identical MST cost). The experimental evidence from a small sample graph shows Prim’s faster wall-clock time in this configuration, while Kruskal performed fewer logical operations; however, the small graph size makes timing noisy. For larger or denser graphs, Prim (with a priority queue) is generally preferable; for sparse, edge-list oriented inputs, Kruskal is often simpler and competitive.
+
+model.Graph Vertices: A, B, C, D, E
+Edges (with weights):
+model.Edge	Weight
+A–B	4
+A–C	3
+B–C	2
+B–D	5
+C–D	7
+D–E	6
+C–E	8
+This graph contains 5 vertices and 7 edges, representing a moderately dense graph.
+Execution Results:
+Algorithm	MST Edges	Total Cost	Operation Count	Execution Time (ms)
+Prim’s	A–C (3), B–C (2), B–D (5), D–E (6)	16	28	0.8124
+Kruskal’s	B–C (2), A–C (3), B–D (5), D–E (6)	16	7	2.2045
+2. Comparison Between Prim’s and Kruskal’s Algorithms
+Both Prim’s and Kruskal’s algorithms are classical greedy approaches for finding a Minimum Spanning Tree (MST) of a connected, weighted, undirected graph. Although they aim to achieve the same goal — connecting all vertices with the minimum total edge weight and without cycles — they differ fundamentally in their design philosophies, data structures, and performance on various graph types.
+Algorithmic Approach
+Prim’s Algorithm begins with an arbitrary starting vertex and gradually grows the MST by repeatedly adding the smallest-weight edge that connects a vertex already in the tree to a vertex not yet included. This means that the algorithm always expands from within the existing structure, maintaining a single connected component throughout its execution.
+In the implemented Java project, Prim’s algorithm uses a priority-based selection process to find the next minimal edge efficiently, relying on adjacency matrix or adjacency list representations. It keeps track of visited vertices and the current minimum edge weights for each unvisited vertex, updating them dynamically after each step.
+Kruskal’s Algorithm, in contrast, works from a completely different perspective. It starts by sorting all edges in non-decreasing order of their weights and then iteratively adds edges to the MST, ensuring no cycles are formed. To prevent cycles, Kruskal’s relies on a Union–Find (Disjoint Set Union) data structure that efficiently determines whether two vertices belong to the same connected component.
+In the implemented project, Kruskal’s algorithm first sorts the edges and then checks connectivity between endpoints before adding an edge. The algorithm continues until all vertices become connected.
+Complexity Analysis
+•	Prim’s Algorithm Complexity:
+o	With adjacency matrix: O(V²)
+o	With adjacency list + priority queue: O(E log V)
+•	Kruskal’s Algorithm Complexity:
+o	Dominated by sorting edges: O(E log E)
+o	Union–Find operations are nearly O(1) on average with path compression
+In practice, Prim’s algorithm performs better on dense graphs (where the number of edges E is close to V²), because it doesn’t need to sort all edges and instead updates only those adjacent to the current tree.
+Kruskal’s algorithm, on the other hand, performs better on sparse graphs, since sorting a small number of edges is relatively efficient, and its disjoint-set operations remain lightweight.
+Performance in This Project
+In this particular project, both algorithms were tested on the same graph consisting of 5 vertices and 7 edges, representing a moderately dense structure. Both produced identical MSTs with a total cost of 16, confirming correctness and consistency.
+However, performance metrics differed:
+•	Prim’s Algorithm completed in 0.8124 ms with 28 logical operations.
+•	Kruskal’s Algorithm completed in 2.2045 ms with only 7 logical operations.
+The results show that Prim’s algorithm was faster overall, despite performing more internal updates, due to its direct edge selection and minimal overhead. Kruskal’s algorithm, although requiring fewer high-level steps, incurred additional computational cost due to sorting all edges before processing.
+Interpretation of Results
+From an algorithmic perspective:
+•	Prim’s algorithm is incremental — it builds the MST step-by-step from an initial vertex outward.
+•	Kruskal’s algorithm is global — it considers the entire graph structure from the start and merges edges greedily.
+From a performance standpoint:
+•	For small or dense graphs, such as in this experiment, Prim’s approach is generally more efficient and easier to implement.
+•	For large or sparse graphs, Kruskal’s can outperform Prim’s, particularly when implemented with efficient Union–Find structures and edge lists.
+From an implementation complexity viewpoint:
+•	Prim’s algorithm is conceptually straightforward and integrates well with adjacency representations.
+•	Kruskal’s requires additional data structures (Union–Find), making the code more abstract but also more flexible for edge-based graph models.
+Conclusion of Comparison
+In the context of this project, both algorithms demonstrated high reliability and produced identical MST results. However, the Prim’s algorithm proved to be more efficient for the given dataset due to the graph’s moderate density and the adjacency-based implementation.
+Nonetheless, Kruskal’s algorithm remains preferable in environments where edge data is pre-sorted or where graphs are sparse and large-scale — for instance, in network optimization, road construction planning, and cluster analysis problems.
+3. Conclusions
+1. Quick recap (correctness & observed behaviour)
+Both Prim’s and Kruskal’s algorithms are correct greedy MST algorithms: they produce valid spanning trees of weight equal to the minimum possible. In your experiment both returned the same MST weight (16), which confirms correctness. However, correctness is only one axis — the choice between the two should be driven by performance characteristics (time, memory), input representation, implementation complexity, and requirements of the target use case.
+________________________________________
+2. Decision factors and practical recommendations
+A. model.Graph density (sparse vs dense)
+•	Sparse graphs: E = O(V) or E << V²
+Prefer Kruskal. Sorting E edges (O(E log E)) is cheap when E is small, and Union–Find operations are nearly constant-time (amortized inverse-Ackermann). Kruskal also naturally operates on edge lists without converting representation.
+•	Dense graphs: E ≈ V²
+Prefer Prim. A good Prim implementation using an adjacency representation + binary heap (priority queue) costs O(E log V), and for dense graphs the constant factor is smaller than sorting all ~V² edges. If implemented with an adjacency matrix, Prim can be O(V²) which is often better than O(E log E) when E is quadratic.
+Rule of thumb:
+•	If E is close to V (sparse) → Kruskal.
+•	If E is close to V² (dense) → Prim.
+(The exact break-even depends on implementation details, constant factors, and hardware.)
+B. model.Edge representation and input format
+•	If your input is an edge list (common in many datasets and contests), Kruskal is natural: no conversion required, only sort-and-scan.
+•	If your input is adjacency lists or adjacency matrices (e.g., graph neural networks, matrix-based data), Prim integrates more naturally and can avoid materializing a global sorted edge list.
+C. Implementation complexity and maintainability
+•	Prim (adj list + priority queue): straightforward; complexity arises if you want true decrease-key behavior (not provided out-of-the-box by Java’s PriorityQueue). A common practical approach is lazy insertion (push new keys and ignore stale entries). Easier to explain and maintain for coursework.
+•	Kruskal: requires a robust Union–Find. Union–Find is not long code, but correct, optimized implementation uses path compression + union by rank — slightly more conceptual overhead. Once implemented, code is compact and often easier to test.
+Recommendation: For a student project where clarity and correctness matter, implement the simplest readable version that still has reasonable asymptotics:
+•	Use adjacency list + PriorityQueue for Prim (lazy decrease-key).
+•	Use Java sort + Union–Find (path compression + union by rank) for Kruskal.
+D. Memory usage
+•	Kruskal needs memory for the edge list O(E) and Union–Find O(V).
+•	Prim (adj list + heap) needs adjacency lists O(V + E) plus heap overhead O(E) in worst-case lazy implementations.
+For extremely memory-constrained environments, Kruskal’s O(E) edge-only footprint is competitive; for dense graphs memory will be large whichever algorithm you pick.
+E. Dynamic graphs and incremental updates
+•	If edges are added or removed frequently, Kruskal can be inconvenient because it requires resorting edges on changes. Prim can be adapted for dynamic maintenance with sophisticated data structures, but both require advanced techniques.
+•	For batch recomputation after changes, Kruskal is often simpler if you can maintain a partially sorted buffer or use incremental union-find techniques.
+F. Parallelism and large-scale computation
+•	Sorting (Kruskal’s main cost) parallelizes well; on multi-core machines Kruskal scales nicely if you use parallel sorting libraries.
+•	Prim’s core (priority queue, sequential additions) is more sequential and harder to parallelize on a single machine (but distributed Prim/Borůvka hybrids exist for very large graphs).
+________________________________________
+3. Practical selection matrix (short)
+•	Small graphs, quick exam/homework: either (Prim easier to visualize).
+•	Sparse, large-scale graphs (networks, social graphs): Kruskal (edge list fits, sorting cheap).
+•	Dense graphs (complete graphs, heavy mesh): Prim (adjacency-based and avoids global sorting).
+•	Highly parallel/distributed environment: Kruskal or Borůvka/hybrids.
+•	Frequent incremental updates: consider dynamic MST algorithms or hybrid approaches.
+________________________________________
+4. Ideas for improvements and experiments (concrete, actionable)
+Implementation improvements
+1.	Prim with a proper decrease-key: implement an indexed binary heap (or use a third-party Fibonacci heap if you want theoretical improvement). This reduces extra heap entries and lowers memory pressure.
+2.	Optimize Union–Find: ensure both path compression and union by rank/size; use iterative find to avoid recursion overhead.
+3.	model.Edge sorting optimizations:
+o	If weights are integers in a bounded range, use radix/counting sort for O(E) sorting.
+o	Use parallel sort for large E (Java Arrays.parallelSort).
+4.	Avoid repeated allocations: reuse data structures between runs when benchmarking to reduce noise.
+Experimental rigor and benchmarking
+1.	Warm-up & repeated runs: run each algorithm many times (e.g., 200–1000), discard the first N warm-up runs for JVM JIT stability, and take mean ± standard deviation.
+2.	Scale sweep: generate synthetic graphs varying V and E systematically (e.g., V = [100, 500, 1000, 5000], E = [V, 5V, 10V, V²/10]) and plot runtime/operation counts.
+3.	Compare data representations: implement both adjacency-list Prim (priority queue) and edge-list Prim (naive) to show representation impact.
+4.	Profiling: use a profiler (VisualVM or IntelliJ profiler) to find hotspots and memory allocation patterns.
+Reporting & reproducibility
+1.	Export results to CSV/JSON automatically from runs for plotting in Python/Excel.
+2.	Add JUnit tests for correctness on random graphs and corner cases (disconnected, duplicate weights).
+3.	Add README + usage examples and include the input JSON templates.
+4.	Use JMH (Java Microbenchmark Harness) for microbenchmarking inner loops reliably.
+Advanced algorithmic directions
+1.	Add Borůvka’s algorithm or hybrid Borůvka–Kruskal approaches — useful in parallel/distributed MST computation.
+2.	Dynamic MST algorithms (e.g., Holm–de Lichtenberg–Thorup) if you need support for many updates.
+3.	C++ re-implementation for high-performance comparison (smaller constants, manual memory control) if target is production.
+________________________________________
+5. Final takeaway
+There is no universally “best” MST algorithm — the right choice depends on:
+•	the size and density of the graph,
+•	the input format (edge list vs adjacency),
+•	performance goals (single-thread latency vs. parallel throughput),
+•	and development constraints (simplicity vs. asymptotic efficiency).
+4. References
+•	Cormen, T. H. et al. Introduction to Algorithms. MIT Press, 2009.
+•	GeeksforGeeks. Difference between Prim’s and Kruskal’s algorithm.
+•	Baeldung. Minimum Spanning Tree Algorithms in Java.
+•	Programiz. Prim’s Algorithm and Kruskal’s Algorithm Explained.

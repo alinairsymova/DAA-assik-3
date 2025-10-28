@@ -113,4 +113,5 @@ public interface MSTAlgorithm {
 
         return actualEdges == expectedEdges && result.isValidMST();
     }
+
 }
